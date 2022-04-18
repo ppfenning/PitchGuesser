@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
-import csv
 import os
 from pathlib import Path
 from datetime import datetime as dt
