@@ -2,16 +2,12 @@ game_date
 pitcher
 player_name
 p_throws
-pitch_number
-at_bat_number
 type
 pitch_type
 pitch_name
 release_speed
 release_pos_x
 release_pos_z
-events
-description
 zone
 balls
 strikes
@@ -19,7 +15,6 @@ pfx_x
 pfx_z
 plate_x
 plate_z
-outs_when_up
 on_1b
 on_2b
 on_3b

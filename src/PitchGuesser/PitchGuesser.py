@@ -23,7 +23,7 @@ class PitchGuesser:
         self.__cols = pd.read_csv(f"{datadir}/cols.csv", header=None).squeeze().to_list()
         self.start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
         self.end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
-        self.data = self.__refresh_data()
+        self.raw_data = self.__refresh_data()
 
     def __get_from_date(self, df):
         if self.start_ts < df.game_date.min():
