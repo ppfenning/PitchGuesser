@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import pandas as pd
 import os
+import tempfile
 from pathlib import Path
 from datetime import datetime as dt
 from datetime import timedelta as td
@@ -8,17 +9,19 @@ import pybaseball as bball
 
 bball.cache.enable()
 
+
 @dataclass
 class PitchGuesser:
     """Class for modeling pitch types"""
-    start_dt: str = '2021-04-01'
+    start_dt: str = '2022-03-17'  # start day for
     end_dt: str = dt.today().strftime("%Y-%m-%d")
     refresh: bool = False
 
     def __post_init__(self):
         pdir = Path(__file__).parent.absolute()
         datadir = os.path.join(pdir, 'data')
-        self.__pkl = f"{datadir}/pitch_data.pkl"
+        tmpdir = tempfile.gettempdir()
+        self.__pkl = f"{tmpdir}/pitch_data.pkl"
         self.__cols = pd.read_csv(f"{datadir}/cols.csv", header=None).squeeze().to_list()
         self.start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
         self.end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
@@ -58,5 +61,6 @@ class PitchGuesser:
         df = self.__get_cols(df)
         return df
 
+
 if __name__ == '__main__':
-    test = PitchGuesser(start_dt='2022-03-01')
+    test = PitchGuesser()
