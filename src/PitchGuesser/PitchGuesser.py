@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import pandas as pd
-import numpy as np
 import os
 from pathlib import Path
 from datetime import datetime as dt
@@ -13,7 +12,7 @@ bball.cache.enable()
 class PitchGuesser:
     """Class for modeling pitch types"""
     start_dt: str = '2021-04-01'
-    end_dt: str = dt.now().strftime("%Y-%m-%d")
+    end_dt: str = dt.today().strftime("%Y-%m-%d")
     refresh: bool = False
 
     def __post_init__(self):
@@ -44,6 +43,7 @@ class PitchGuesser:
     def __get_end_dates(self, df):
         df = self.__get_from_date(df)
         df = self.__get_to_date(df)
+        df.to_pickle(self.__pkl)
         return df.loc[(df['game_date'] >= self.start_ts) & (df['game_date'] <= self.end_ts)]
 
     def __get_cols(self, df):
@@ -56,7 +56,6 @@ class PitchGuesser:
             df = bball.statcast(self.start_dt, self.end_dt)
         df = self.__get_end_dates(df)
         df = self.__get_cols(df)
-        df.to_pickle(self.__pkl)
         return df
 
 if __name__ == '__main__':
