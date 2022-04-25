@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime as dt
 from datetime import timedelta as td
 import pybaseball as bball
+from sklearn.model_selection import train_test_split
 
 bball.cache.enable()
 
@@ -23,12 +24,13 @@ class PitchGuesser:
         tmpdir = tempfile.gettempdir()
         self.__pkl = f"{tmpdir}/pitch_data.pkl"
         self.__cols = pd.read_csv(f"{datadir}/cols.csv", header=None).squeeze().to_list()
-        self.start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
-        self.end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
-        self.raw_data = self.__refresh_data()
+        self.__start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
+        self.__end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
+        self.raw_data = self.__get_data()
+        self.__splitter()
 
     def __get_from_date(self, df):
-        if self.start_ts < df.game_date.min():
+        if self.__start_ts < df.game_date.min():
             df = pd.concat([df, bball.statcast(
                 start_dt=self.start_dt,
                 end_dt=dt.strftime(df.game_date.min(), "%Y-%m-%d")
@@ -36,30 +38,50 @@ class PitchGuesser:
         return df
 
     def __get_to_date(self, df):
-        if self.end_ts > df.game_date.max() + td(days=1):
+        if self.__end_ts > df.game_date.max() + td(days=1):
             df = pd.concat([df, bball.statcast(
                 start_dt=dt.strftime(df.game_date.max(), "%Y-%m-%d"),
                 end_dt=self.end_dt
             )])
         return df
 
-    def __get_end_dates(self, df):
-        df = self.__get_from_date(df)
-        df = self.__get_to_date(df)
+    def __clean_data(self, df):
+        df = df.dropna(subset=['release_speed', 'release_pos_x', 'release_pos_z'])
         df.to_pickle(self.__pkl)
-        return df.loc[(df['game_date'] >= self.start_ts) & (df['game_date'] <= self.end_ts)]
+        df = self.__get_cols(df)
+        return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts)]
 
-    def __get_cols(self, df):
-        return df[self.__cols]
+    def __splitter(self):
 
-    def __refresh_data(self):
+        skip_cols = (
+            'game_date',
+            'pitcher',
+            'player_name',
+            'pitch_type',
+            'pitch_name',
+        )
+
+        X = self.raw_data.loc[:, ~self.raw_data.columns.isin(skip_cols)]
+        y = self.raw_data.pitch_type
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X,
+            y,
+            test_size=0.3,
+            random_state=42
+        )
+
+    def __get_data(self):
         if os.path.exists(self.__pkl) and not self.refresh:
             df = pd.read_pickle(self.__pkl)
         else:
             df = bball.statcast(self.start_dt, self.end_dt)
-        df = self.__get_end_dates(df)
-        df = self.__get_cols(df)
-        return df
+        df = self.__get_from_date(df)
+        df = self.__get_to_date(df)
+        return self.__clean_data(df)
+
+    def __get_cols(self, df):
+        return df[self.__cols]
 
 
 if __name__ == '__main__':
