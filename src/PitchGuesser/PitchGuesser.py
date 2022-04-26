@@ -179,6 +179,7 @@ class PitchDTC(PitchModelBase):
         self.model = self.__model()
         self.prediction = self.__prediction()
         self.score = self.__score()
+        self.cm = confusion_matrix(self.y_test, self.prediction)
 
     def __model(self):
         model = DecisionTreeClassifier(max_depth=2)
@@ -192,4 +193,4 @@ class PitchDTC(PitchModelBase):
         return accuracy_score(self.y_test, self.prediction)
 
 if __name__ == '__main__':
-    test = PitchDTC(start_dt='2021-03-17')
+    test = PitchDTC(start_dt='2022-03-17')
