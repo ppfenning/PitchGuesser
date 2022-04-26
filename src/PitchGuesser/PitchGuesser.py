@@ -27,10 +27,9 @@ class PitchData:
 
     def __post_init__(self):
         pdir = Path(__file__).parent.absolute()
-        datadir = os.path.join(pdir, 'data')
+        self.datadir = os.path.join(pdir, 'data')
         tmpdir = tempfile.gettempdir()
         self.__pkl = f"{tmpdir}/pitch_data.pkl"
-        self.__cols = pd.read_csv(f"{datadir}/cols.csv", header=None).squeeze().to_list()
         self.__start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
         self.__end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
         self.raw_data = self.__get_data()
@@ -59,6 +58,13 @@ class PitchData:
         df = df.fillna(method='ffill')
         return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts)]
 
+    def __scaler(self, df):
+        scaled = pd.read_csv(f"{self.datadir}/scaled.csv", header=None).squeeze().to_list()
+        for scale in scaled:
+            data = df[scale]
+            df[scale] = (data - np.min(data))/(np.max(data)-np.min(data))
+        return df
+
     def __preprocess(self, df):
         df2 = df.copy()
         df2['lefty'] = (df.p_throws == 'L').astype(int)
@@ -68,8 +74,7 @@ class PitchData:
         df2['hit_in_play'] = (df.type == 'X').astype(int)
         le = LabelEncoder()
         df2['pitch_type'] = le.fit_transform(df['pitch_type'])
-        for spin in ['release_spin_rate', 'spin_axis']:
-            df2[spin] = (df[spin] - np.min(df[spin]))/(np.max(df[spin])-np.min(df[spin]))
+        df2 = self.__scaler(df2)
         return df2
 
     def __get_data(self):
@@ -82,20 +87,8 @@ class PitchData:
         return self.__clean_data(df)
 
     def __get_cols(self, df):
-        return df[self.__cols]
-
-    def __get_model(self):
-        model = OneVsRestClassifier(SVC())
-        model.fit(self.X_test, self.y_test)
-        return model
-
-    def __predict(self):
-        return self.model.predict(self.X_train)
-
-    def show_acc(self):
-        # Evaluating the model
-        print(f"Test Set Accuracy : {accuracy_score(self.y_test, self.prediction) *100} % \n\n")
-        print(f"Classification Report : \n\n{classification_report(self.y_test, self.prediction)}")
+        cols = pd.read_csv(f"{self.datadir}/cols.csv", header=None).squeeze().to_list()
+        return df[cols]
 
 @dataclass
 class PitchModelBase(PitchData):
@@ -183,9 +176,20 @@ class PitchDTC(PitchModelBase):
 
     def __post_init__(self):
         super(PitchDTC, self).__post_init__()
-        self.dtree_model = DecisionTreeClassifier(max_depth=2).fit(self.X_train, self.y_train)
-        self.dtree_predictions = self.dtree_model.predict(self.X_test)
-        self.cm = confusion_matrix(self.y_test, self.dtree_predictions)
+        self.model = self.__model()
+        self.prediction = self.__prediction()
+        self.score = self.__score()
+
+    def __model(self):
+        model = DecisionTreeClassifier(max_depth=2)
+        model.fit(self.X_train, self.y_train)
+        return model
+
+    def __prediction(self):
+        return self.model.predict(self.X_test)
+
+    def __score(self):
+        return accuracy_score(self.y_test, self.prediction)
 
 if __name__ == '__main__':
-    test = PitchLR(start_dt='2022-04-20')
+    test = PitchDTC(start_dt='2021-03-17')
