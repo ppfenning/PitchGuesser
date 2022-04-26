@@ -1,12 +1,16 @@
 from dataclasses import dataclass
-import pandas as pd
-import os
-import tempfile
-from pathlib import Path
 from datetime import datetime as dt
 from datetime import timedelta as td
-import pybaseball as bball
+from pathlib import Path
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.svm import SVC
+import os
+import pandas as pd
+import pybaseball as bball
+import tempfile
 
 bball.cache.enable()
 
@@ -28,6 +32,8 @@ class PitchGuesser:
         self.__end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
         self.raw_data = self.__get_data()
         self.__splitter()
+        #self.model = self.__get_model()
+        #self.prediction = self.__predict()
 
     def __get_from_date(self, df):
         if self.__start_ts < df.game_date.min():
@@ -49,7 +55,18 @@ class PitchGuesser:
         df = df.dropna(subset=['release_speed', 'release_pos_x', 'release_pos_z'])
         df.to_pickle(self.__pkl)
         df = self.__get_cols(df)
+        df = self.__preprocess(df)
+        df = df.fillna(method='ffill')
         return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts)]
+
+    def __preprocess(self, df):
+        self.class_lst = dict()
+        for cname, ctype in df.dtypes.items():
+            if ctype == 'object':
+                le = LabelEncoder()
+                df[cname] = le.fit_transform(df[cname])
+                self.class_lst[cname] = le
+        return df
 
     def __splitter(self):
 
@@ -82,6 +99,19 @@ class PitchGuesser:
 
     def __get_cols(self, df):
         return df[self.__cols]
+
+    def __get_model(self):
+        model = OneVsRestClassifier(SVC())
+        model.fit(self.X_test, self.y_test)
+        return model
+
+    def __predict(self):
+        return self.model.predict(self.X_train)
+
+    def show_acc(self):
+        # Evaluating the model
+        print(f"Test Set Accuracy : {accuracy_score(self.y_test, self.prediction) *100} % \n\n")
+        print(f"Classification Report : \n\n{classification_report(self.y_test, self.prediction)}")
 
 
 if __name__ == '__main__':
