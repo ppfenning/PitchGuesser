@@ -5,6 +5,7 @@ from pathlib import Path
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn.tree import DecisionTreeClassifier
 import scipy.optimize as opt
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix
@@ -163,20 +164,28 @@ class PitchLR(PitchModelBase):
         return X.transpose() @ (predictions - y) / len(y)
 
     def __getClassifier(self):
-        num_labels = len(self.y_test.unique())
-        num_features = self.X_test.shape[1]
+        num_labels = len(self.y_train.unique())
+        num_features = self.X_train.shape[1]
         classifiers = np.zeros(shape=(num_labels, num_features))
         for c in range(num_labels):
-            label = (self.y_test == c).astype(int)
+            label = (self.y_train == c).astype(int)
             init_theta = np.zeros(num_features)
-            print(c)
-            #classifiers[c, :] = opt.fmin_cg(
-            #    self.__cost,
-            #    init_theta,
-            #    self.__cost_gradient,
-            #    (self.X_test, label),
-            #)
+            classifiers[c, :] = opt.fmin_cg(
+                self.__cost,
+                init_theta,
+                self.__cost_gradient,
+                (self.X_train, label),
+            )
         return classifiers
+
+@dataclass
+class PitchDTC(PitchModelBase):
+
+    def __post_init__(self):
+        super(PitchDTC, self).__post_init__()
+        self.dtree_model = DecisionTreeClassifier(max_depth=2).fit(self.X_train, self.y_train)
+        self.dtree_predictions = self.dtree_model.predict(self.X_test)
+        self.cm = confusion_matrix(self.y_test, self.dtree_predictions)
 
 if __name__ == '__main__':
     test = PitchLR(start_dt='2022-04-20')
