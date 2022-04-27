@@ -37,10 +37,6 @@ class PitchData:
         self.__start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
         self.__end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
         self.raw_data = self.__get_data()
-        self.features = {
-            'numeric': 1,
-            'categorical': 1
-        }
 
     def __get_from_date(self, df):
         if self.__start_ts < df.game_date.min():
