@@ -153,11 +153,14 @@ class PitchModelBuild(PitchData):
 
 @dataclass
 class PitchGuessPost(PitchModelBuild):
+
+    model_name = ''
     
     def __post_init__(self):
         super(PitchGuessPost, self).__post_init__()
         self.y_predict = self.__prediction()
         self.cm = self.__get_cm()
+        self.score = self.__score()
         self.feature_types = self.__feature_types()
 
     def __feature_types(self):
@@ -201,7 +204,7 @@ class PitchGuessPost(PitchModelBuild):
             columns=self.pitches
         )
 
-    def score(self):
+    def __score(self):
         return accuracy_score(self.y_test, self.y_predict)
 
     def class_report(self):
@@ -223,12 +226,14 @@ class PitchRFC(PitchGuessPost):
         'n_estimators': [100, 200, 500],
         'criterion': ['gini', 'entropy']
     }
+    model_name = 'Random Forest'
     model = _get_grid_search(RandomForestClassifier(random_state=random_state), __params)
     model_pkl = f'{tmpdir}/RFC.pkl'
 
 @dataclass
 class PitchGBC(PitchGuessPost):
     # this took too long for gridsearch
+    model_name = 'Gradient Boosting'
     model = GradientBoostingClassifier(random_state=random_state)
     model_pkl = f'{tmpdir}/GBC.pkl'
 
@@ -239,8 +244,11 @@ class PitchKNN(PitchGuessPost):
         'weights': ['uniform', 'distance'],
         'metric': ['euclidean']
     }
+    model_name = 'K-Nearest Neighbor'
     model = _get_grid_search(KNeighborsClassifier(), __params)
     model_pkl = f'{tmpdir}/KNN.pkl'
 
 if __name__ == '__main__':
-    test = PitchKNN(start_dt='2022-03-17')
+    rfc = PitchRFC(start_dt='2022-03-17')
+    gbc = PitchGBC(start_dt='2022-03-17')
+    knn = PitchKNN(start_dt='2022-03-17')
