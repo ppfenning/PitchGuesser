@@ -5,6 +5,7 @@ from pathlib import Path
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import numpy as np
@@ -167,7 +168,7 @@ class PitchGuessPost(PitchModelBuild):
             'numeric': numeric,
         }
 
-    def correlation(self):
+    def show_correlation(self):
         corr_df = self.X_train[self.feature_types['numeric']]  # New dataframe to calculate correlation between numeric features
         cor = corr_df.corr(method='pearson')
         fig, ax = plt.subplots(figsize=(8, 6))
@@ -182,6 +183,14 @@ class PitchGuessPost(PitchModelBuild):
         plt.show()
         return cor
 
+    def show_pair_plot(self):
+        sns.set()
+        fcols = self.feature_types['numeric'] + ['pitch_name']
+        df = self.raw_data[fcols].sample(300, replace=False).reset_index(drop=True)
+        plt.title("Pair Plot")
+        sns.pairplot(df, hue="pitch_name")
+        plt.show()
+
     def __prediction(self):
         return self.model.predict(self.X_test)
 
@@ -195,15 +204,10 @@ class PitchGuessPost(PitchModelBuild):
     def score(self):
         return accuracy_score(self.y_test, self.y_predict)
 
-    def show_best_params(self):
-        bp = self.model.best_params_
-        print(bp)
-        return bp
-
     def class_report(self):
         print(classification_report(self.y_test, self.y_predict))
 
-def _getGridsearch(model, params):
+def _get_grid_search(model, params):
     return GridSearchCV(
         model,
         params,
@@ -219,18 +223,24 @@ class PitchRFC(PitchGuessPost):
         'n_estimators': [100, 200, 500],
         'criterion': ['gini', 'entropy']
     }
-    model = _getGridsearch(RandomForestClassifier(random_state=random_state), __params)
+    model = _get_grid_search(RandomForestClassifier(random_state=random_state), __params)
     model_pkl = f'{tmpdir}/RFC.pkl'
 
 @dataclass
 class PitchGBC(PitchGuessPost):
-    __params = {
-        "loss": ["deviance"],
-        "learning_rate": [0.01, 0.05, 0.1, 0.15, 0.2],
-        "criterion": ["friedman_mse",  "absolute_error"]
-    }
-    model = _getGridsearch(GradientBoostingClassifier(random_state=random_state), __params)
+    # this took too long for gridsearch
+    model = GradientBoostingClassifier(random_state=random_state)
     model_pkl = f'{tmpdir}/GBC.pkl'
 
+@dataclass
+class PitchKNN(PitchGuessPost):
+    __params = {
+        'n_neighbors': [5, 10, 15],
+        'weights': ['uniform', 'distance'],
+        'metric': ['euclidean']
+    }
+    model = _get_grid_search(KNeighborsClassifier(), __params)
+    model_pkl = f'{tmpdir}/KNN.pkl'
+
 if __name__ == '__main__':
-    test = PitchGBC(start_dt='2022-03-17')
+    test = PitchKNN(start_dt='2022-03-17')
