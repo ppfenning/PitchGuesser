@@ -2,13 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta as td
 from pathlib import Path
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.model_selection import train_test_split
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
 import os
 import pandas as pd
 import pybaseball as bball
