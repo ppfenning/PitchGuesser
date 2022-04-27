@@ -16,6 +16,7 @@ import seaborn as sns
 import tempfile
 
 bball.cache.enable()
+random_state = 42
 tmpdir = f'{tempfile.gettempdir()}/PitchGuesser'
 if not os.path.exists(tmpdir):
     os.mkdir(tmpdir)
@@ -101,7 +102,6 @@ class PitchModelBuild(PitchData):
     model = None
     model_pkl = None
     test_size: float = 0.30
-    random_state = 42
 
     def __post_init__(self):
         if self.model is None:
@@ -138,7 +138,7 @@ class PitchModelBuild(PitchData):
             X,
             y,
             test_size=self.test_size,
-            random_state=self.random_state
+            random_state=random_state
         )
 
     def __fit(self):
@@ -157,15 +157,30 @@ class PitchGuessPost(PitchModelBuild):
         super(PitchGuessPost, self).__post_init__()
         self.y_predict = self.__prediction()
         self.cm = self.__get_cm()
+        self.feature_types = self.__feature_types()
 
-    @property
     def __feature_types(self):
         categorical = list(self.X_test.select_dtypes(include=['bool']).columns) + ['zone']
-        numeric = list(self.X_test[~self.X_test.columns.isin(categorical)].columns)
+        numeric = list(self.X_test.loc[:, ~self.X_test.columns.isin(categorical)].columns)
         return {
             'categorical': categorical,
             'numeric': numeric,
         }
+
+    def correlation(self):
+        corr_df = self.X_train[self.feature_types['numeric']]  # New dataframe to calculate correlation between numeric features
+        cor = corr_df.corr(method='pearson')
+        fig, ax = plt.subplots(figsize=(8, 6))
+        plt.title("Correlation Plot")
+        sns.heatmap(
+            cor,
+            mask=np.zeros_like(cor, dtype=np.bool_),
+            cmap=sns.diverging_palette(220, 10, as_cmap=True),
+            square=True,
+            ax=ax
+        )
+        plt.show()
+        return cor
 
     def __prediction(self):
         return self.model.predict(self.X_test)
@@ -180,21 +195,42 @@ class PitchGuessPost(PitchModelBuild):
     def score(self):
         return accuracy_score(self.y_test, self.y_predict)
 
+    def show_best_params(self):
+        bp = self.model.best_params_
+        print(bp)
+        return bp
+
     def class_report(self):
         print(classification_report(self.y_test, self.y_predict))
 
+def _getGridsearch(model, params):
+    return GridSearchCV(
+        model,
+        params,
+        cv=2,
+        n_jobs=-1,
+        verbose=1,
+        scoring='f1_micro'
+    )
+
 @dataclass
 class PitchRFC(PitchGuessPost):
-    #model = GridSearchCV(
-    #    RandomForestClassifier(n_estimators=100),
-    #    params,
-    #    cv=3,
-    #    n_jobs=-1,
-    #    verbose=1,
-    #    scoring='f1_micro'
-    #)
-    model = RandomForestClassifier(n_estimators=100)
+    __params = {
+        'n_estimators': [100, 200, 500],
+        'criterion': ['gini', 'entropy']
+    }
+    model = _getGridsearch(RandomForestClassifier(random_state=random_state), __params)
     model_pkl = f'{tmpdir}/RFC.pkl'
 
+@dataclass
+class PitchGBC(PitchGuessPost):
+    __params = {
+        "loss": ["deviance"],
+        "learning_rate": [0.01, 0.05, 0.1, 0.15, 0.2],
+        "criterion": ["friedman_mse",  "absolute_error"]
+    }
+    model = _getGridsearch(GradientBoostingClassifier(random_state=random_state), __params)
+    model_pkl = f'{tmpdir}/GBC.pkl'
+
 if __name__ == '__main__':
-    test = PitchRFC(start_dt='2022-03-17')
+    test = PitchGBC(start_dt='2022-03-17')
