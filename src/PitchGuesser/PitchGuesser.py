@@ -5,8 +5,7 @@ from pathlib import Path
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
-import scipy.optimize as opt
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix
 from sklearn.svm import SVC
@@ -56,7 +55,10 @@ class PitchData:
         df = self.__preprocess(df)
         df = self.__get_cols(df)
         df = df.fillna(method='ffill')
-        return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts)]
+        # most common pitches
+        pitches = ['4-Seam Fastball', 'Changeup', 'Curveball', 'Cutter', 'Sinker', 'Slider']
+        df = df.loc[df.pitch_name.isin(pitches), :].sort_values(by=['pitch_name', 'game_date', 'pitcher'])
+        return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts), :]
 
     def __scaler(self, df):
         scaled = pd.read_csv(f"{self.datadir}/scaled.csv", header=None).squeeze().to_list()
@@ -72,8 +74,6 @@ class PitchData:
         df2['ball'] = (df.type == 'B').astype(int)
         df2['strike'] = (df.type == 'S').astype(int)
         df2['hit_in_play'] = (df.type == 'X').astype(int)
-        le = LabelEncoder()
-        df2['pitch_type'] = le.fit_transform(df['pitch_type'])
         df2 = self.__scaler(df2)
         return df2
 
@@ -92,11 +92,17 @@ class PitchData:
 
 @dataclass
 class PitchModelBase(PitchData):
-    test_size = 0.30
+    model = None
+    test_size: float = 0.30
 
     def __post_init__(self):
+        if self.model is None:
+            raise ValueError('A model must be passed')
         super(PitchModelBase, self).__post_init__()
         self.__splitter()
+        self.__fit()
+        self.y_predict = self.__prediction()
+        self.cm = confusion_matrix(self.y_test, self.y_predict)
 
     def __set_X_y(self):
 
@@ -104,14 +110,15 @@ class PitchModelBase(PitchData):
             'game_date',
             'pitcher',
             'player_name',
-            'pitch_type',
             'pitch_name',
             'p_throws',
             'type',
         )
 
         X = self.raw_data.loc[:, ~self.raw_data.columns.isin(skip_cols)].copy()
-        y = self.raw_data.pitch_type
+        le = LabelEncoder()
+        y = self.raw_data.pitch_name
+        y = le.fit_transform(y)
 
         return X, y
 
@@ -126,71 +133,21 @@ class PitchModelBase(PitchData):
             random_state=42
         )
 
-
-@dataclass
-class PitchLR(PitchModelBase):
-    
-    def __post_init__(self):
-        super(PitchLR, self).__post_init__()
-        self.X_test = self.__get_interc(self.X_test)
-        self.X_train = self.__get_interc(self.X_train)
-        self.classifiers = self.__getClassifier()
-
-    @staticmethod
-    def __get_interc(df):
-        df2 = df.copy()
-        df2.loc[:, 'inter'] = 1.
-        return df2.loc[:, ['inter'] + list(df.columns)]
-
-    @staticmethod
-    def __sigmoid(z):
-        return 1 / (1 + np.exp(-z.astype(np.float64)))
-
-    def __cost(self, theta, X, y):
-        predictions = self.__sigmoid(X @ theta)
-        predictions[predictions == 1] = 0.999  # log(1)=0 causes error in division
-        error = -y * np.log(predictions) - (1 - y) * np.log(1 - predictions)
-        return sum(error) / len(y)
-
-    def __cost_gradient(self, theta, X, y):
-        predictions = self.__sigmoid(X @ theta)
-        return X.transpose() @ (predictions - y) / len(y)
-
-    def __getClassifier(self):
-        num_labels = len(self.y_train.unique())
-        num_features = self.X_train.shape[1]
-        classifiers = np.zeros(shape=(num_labels, num_features))
-        for c in range(num_labels):
-            label = (self.y_train == c).astype(int)
-            init_theta = np.zeros(num_features)
-            classifiers[c, :] = opt.fmin_cg(
-                self.__cost,
-                init_theta,
-                self.__cost_gradient,
-                (self.X_train, label),
-            )
-        return classifiers
-
-@dataclass
-class PitchDTC(PitchModelBase):
-
-    def __post_init__(self):
-        super(PitchDTC, self).__post_init__()
-        self.model = self.__model()
-        self.prediction = self.__prediction()
-        self.score = self.__score()
-        self.cm = confusion_matrix(self.y_test, self.prediction)
-
-    def __model(self):
-        model = DecisionTreeClassifier(max_depth=2)
-        model.fit(self.X_train, self.y_train)
-        return model
+    def __fit(self):
+        self.model.fit(self.X_train, self.y_train)
 
     def __prediction(self):
         return self.model.predict(self.X_test)
 
-    def __score(self):
-        return accuracy_score(self.y_test, self.prediction)
+    def score(self):
+        return accuracy_score(self.y_test, self.y_predict)
+
+    def class_report(self):
+        return classification_report(self.y_test, self.y_predict)
+
+@dataclass
+class PitchRFC(PitchModelBase):
+    model = RandomForestClassifier(n_estimators=100)
 
 if __name__ == '__main__':
-    test = PitchDTC(start_dt='2022-03-17')
+    test = PitchRFC(start_dt='2022-03-17')
