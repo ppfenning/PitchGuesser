@@ -32,14 +32,9 @@ tr:nth-child(even) {
 }
 </style>
 
-# Pitch Guesser
-
-![Alt text](plots/correlation.png "a title")
-![Alt text](plots/pair_plot.png "a title")
-
-## Random Forest
+# Random Forest
 ***
-### Base
+## Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -190,7 +185,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Scaled
+## Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -341,7 +336,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Add_feature
+## Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -492,7 +487,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Preprocess
+## Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -643,7 +638,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Transform
+## Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -794,7 +789,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Noise
+## Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -945,9 +940,9 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-## K-Nearest Neighbor
+# K-Nearest Neighbor
 ***
-### Base
+## Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1098,7 +1093,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Scaled
+## Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1249,7 +1244,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Add_feature
+## Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1400,7 +1395,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Preprocess
+## Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1551,7 +1546,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Transform
+## Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1702,7 +1697,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Noise
+## Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1853,9 +1848,9 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-## Gradient Boosting
+# Gradient Boosting
 ***
-### Base
+## Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2006,7 +2001,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Scaled
+## Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2157,7 +2152,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Add_feature
+## Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2308,7 +2303,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Preprocess
+## Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2459,7 +2454,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Transform
+## Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2610,7 +2605,7 @@ tr:nth-child(even) {
   </tbody>
 </table>
 
-### Noise
+## Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">

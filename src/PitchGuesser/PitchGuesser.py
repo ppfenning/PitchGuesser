@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta as td
@@ -9,6 +8,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as random
@@ -19,7 +19,10 @@ import pybaseball as bball
 import seaborn as sns
 import tempfile
 
+matplotlib.use('Agg')
+matplotlib.style.use('ggplot')
 bball.cache.enable()
+
 random_state = 42
 tmpdir = f'{tempfile.gettempdir()}/PitchGuesser'
 if not os.path.exists(tmpdir):
@@ -43,18 +46,24 @@ class PitchData:
 
     def __get_from_date(self, df):
         if self.__start_ts < df.game_date.min():
-            df = pd.concat([df, bball.statcast(
+            new_days = bball.statcast(
                 start_dt=self.start_dt,
-                end_dt=dt.strftime(df.game_date.min(), "%Y-%m-%d")
-            )])
+                end_dt=dt.strftime(df.game_date.min(), "%Y-%m-%d"),
+                verbose=False
+            )
+            if not new_days.empty:
+                df = pd.concat([df, new_days])
         return df
 
     def __get_to_date(self, df):
         if self.__end_ts > df.game_date.max() + td(days=1):
-            df = pd.concat([df, bball.statcast(
+            new_days = bball.statcast(
                 start_dt=dt.strftime(df.game_date.max() + td(days=1), "%Y-%m-%d"),
-                end_dt=self.end_dt
-            )])
+                end_dt=self.end_dt,
+                verbose=False
+            )
+            if not new_days.empty:
+                df = pd.concat([df, new_days])
         return df
 
     def __clean_data(self, df):
@@ -245,14 +254,6 @@ class PitchGuessPost(PitchModelBuild):
         plt.show()
         return cor
 
-    def show_pair_plot(self):
-        sns.set()
-        fcols = self.features['numeric'] + ['pitch_name']
-        df = self.raw_data[fcols].sample(300, replace=False).reset_index(drop=True)
-        plt.title("Pair Plot")
-        sns.pairplot(df, hue="pitch_name")
-        plt.show()
-
     def __prediction(self):
         return self.model.predict(self.X_test)
 
@@ -267,7 +268,7 @@ class PitchGuessPost(PitchModelBuild):
         return accuracy_score(self.y_test, self.y_predict)
 
     def class_report(self):
-        print(classification_report(self.y_test, self.y_predict))
+        return pd.DataFrame(classification_report(self.y_test, self.y_predict, output_dict=True))
 
 def _get_grid_search(model, params):
     return GridSearchCV(
@@ -334,3 +335,12 @@ def get_experiments():
             'noise': PitchGBC(start_dt='2022-03-17', experiment=5)
         }
     }
+
+def pair_plots():
+    sns.set()
+    rfc = PitchRFC()
+    df_full = rfc.raw_data[rfc.features['numeric']]
+    print(df_full)
+
+if __name__ == '__main__':
+    pair_plots()
