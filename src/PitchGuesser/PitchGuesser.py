@@ -334,8 +334,3 @@ def get_experiments():
             'noise': PitchGBC(start_dt='2022-03-17', experiment=5)
         }
     }
-
-if __name__ == '__main__':
-    PitchRFC(start_dt='2022-03-17', experiment=4, refresh=True)
-    PitchKNN(start_dt='2022-03-17', experiment=4, refresh=True)
-    PitchGBC(start_dt='2022-03-17', experiment=4, refresh=True)
