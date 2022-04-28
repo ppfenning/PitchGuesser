@@ -10,6 +10,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.random as random
 import os
 import pandas as pd
 import pickle
@@ -153,6 +154,10 @@ class PitchModelBuild(PitchData):
             X['pfx_mag'] = np.sqrt(X.pfx_x**2 + X.pfx_z**2)
             X['a_mag'] = np.sqrt(X.ax**2 + X.ay**2 + X.az**2)
             X['v0_mag'] = np.sqrt(X.vx0**2 + X.vy0**2 + X.vz0**2)
+        elif self.experiment == 5:
+            self.model_pkl = self.__get_exp_model_path('random')
+            X['random_cont'] = [random.uniform(100, 300) for _ in range(len(X))]
+            X['random_desc'] = random.randint(1, 6, len(X))
         return X
 
     def __set_x_y(self):
@@ -286,14 +291,19 @@ class PitchKNN(PitchGuessPost):
 
 if __name__ == '__main__':
     # base
-    PitchRFC(start_dt='2022-03-17', refresh=True)
-    PitchKNN(start_dt='2022-03-17', refresh=True)
-    PitchGBC(start_dt='2022-03-17', refresh=True)
-    # exp1
-    PitchRFC(start_dt='2022-03-17', refresh=True, experiment=1)
-    PitchKNN(start_dt='2022-03-17', refresh=True, experiment=1)
-    PitchGBC(start_dt='2022-03-17', refresh=True, experiment=1)
-    # exp2
-    PitchRFC(start_dt='2022-03-17', refresh=True, experiment=2)
-    PitchKNN(start_dt='2022-03-17', refresh=True, experiment=2)
-    PitchGBC(start_dt='2022-03-17', refresh=True, experiment=2)
+    #PitchRFC(start_dt='2022-03-17')
+    #PitchKNN(start_dt='2022-03-17')
+    #PitchGBC(start_dt='2022-03-17')
+    ## exp1
+    #PitchRFC(start_dt='2022-03-17', experiment=1)
+    #PitchKNN(start_dt='2022-03-17', experiment=1)
+    #PitchGBC(start_dt='2022-03-17', experiment=1)
+    ## exp2
+    #PitchRFC(start_dt='2022-03-17', experiment=2)
+    #PitchKNN(start_dt='2022-03-17', experiment=2)
+    #PitchGBC(start_dt='2022-03-17', experiment=2)
+    # exp5
+    #PitchRFC(start_dt='2022-03-17', experiment=5)
+    #PitchKNN(start_dt='2022-03-17', experiment=5)
+    #PitchGBC(start_dt='2022-03-17', experiment=5)
+    pass
