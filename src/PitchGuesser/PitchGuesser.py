@@ -1,13 +1,13 @@
+import sys
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta as td
 from pathlib import Path
-from sklearn.decomposition import PCA
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as random
@@ -154,6 +154,15 @@ class PitchModelBuild(PitchData):
             X['pfx_mag'] = np.sqrt(X.pfx_x**2 + X.pfx_z**2)
             X['a_mag'] = np.sqrt(X.ax**2 + X.ay**2 + X.az**2)
             X['v0_mag'] = np.sqrt(X.vx0**2 + X.vy0**2 + X.vz0**2)
+        elif self.experiment == 3:
+            self.model_pkl = self.__get_exp_model_path('preprocess')
+            X_cat = X[self.features['categorical']].copy()
+            X_num = X[self.features['numeric']].copy()
+            # MinMaxScaler logic (manual approach)
+            X_num_std = (X_num - X_num.min(axis=0)) / (X_num.max(axis=0) - X_num.min(axis=0))
+            X = pd.concat([X_cat, X_num_std], axis=1)
+        elif self.experiment == 4:
+            self.model_pkl = self.__get_exp_model_path('transform')
         elif self.experiment == 5:
             self.model_pkl = self.__get_exp_model_path('random')
             X['random_cont'] = [random.uniform(100, 300) for _ in range(len(X))]
@@ -299,7 +308,7 @@ def get_experiments():
             'transform': PitchRFC(start_dt='2022-03-17', experiment=4),
             'noise': PitchRFC(start_dt='2022-03-17', experiment=5)
         },
-        'GBC': {
+        'KNN': {
             'base': PitchKNN(start_dt='2022-03-17'),
             'scaled': PitchKNN(start_dt='2022-03-17', experiment=1),
             'add_feature': PitchKNN(start_dt='2022-03-17', experiment=2),
@@ -307,7 +316,7 @@ def get_experiments():
             'transform': PitchKNN(start_dt='2022-03-17', experiment=4),
             'noise': PitchKNN(start_dt='2022-03-17', experiment=5)
         },
-        'KNN': {
+        'GBC': {
             'base': PitchGBC(start_dt='2022-03-17'),
             'scaled': PitchGBC(start_dt='2022-03-17', experiment=1),
             'add_feature': PitchGBC(start_dt='2022-03-17', experiment=2),
@@ -318,4 +327,6 @@ def get_experiments():
     }
 
 if __name__ == '__main__':
-    pass
+    PitchRFC(start_dt='2022-03-17', experiment=3)
+    PitchKNN(start_dt='2022-03-17', experiment=3)
+    PitchGBC(start_dt='2022-03-17', experiment=3)
