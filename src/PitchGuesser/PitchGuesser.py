@@ -3,11 +3,12 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta as td
 from pathlib import Path
+from sklearn.decomposition import PCA
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as random
@@ -51,7 +52,7 @@ class PitchData:
     def __get_to_date(self, df):
         if self.__end_ts > df.game_date.max() + td(days=1):
             df = pd.concat([df, bball.statcast(
-                start_dt=dt.strftime(df.game_date.max(), "%Y-%m-%d"),
+                start_dt=dt.strftime(df.game_date.max() + td(days=1), "%Y-%m-%d"),
                 end_dt=self.end_dt
             )])
         return df
@@ -163,6 +164,8 @@ class PitchModelBuild(PitchData):
             X = pd.concat([X_cat, X_num_std], axis=1)
         elif self.experiment == 4:
             self.model_pkl = self.__get_exp_model_path('transform')
+            X_num = X[self.features['numeric']].copy()
+            X = StandardScaler().fit_transform(X_num)
         elif self.experiment == 5:
             self.model_pkl = self.__get_exp_model_path('random')
             X['random_cont'] = [random.uniform(100, 300) for _ in range(len(X))]
@@ -197,6 +200,12 @@ class PitchModelBuild(PitchData):
             test_size=self.test_size,
             random_state=random_state
         )
+
+        if self.experiment == 4:
+            pca = PCA(n_components=0.95, random_state=random_state)
+            pca.fit(self.X_train)
+            self.X_train = pd.DataFrame(pca.transform(self.X_train))
+            self.X_test = pd.DataFrame(pca.transform(self.X_test))
 
     def __fit(self):
         if not os.path.exists(self.model_pkl) or self.refresh:
@@ -327,6 +336,6 @@ def get_experiments():
     }
 
 if __name__ == '__main__':
-    PitchRFC(start_dt='2022-03-17', experiment=3)
-    PitchKNN(start_dt='2022-03-17', experiment=3)
-    PitchGBC(start_dt='2022-03-17', experiment=3)
+    PitchRFC(start_dt='2022-03-17', experiment=4, refresh=True)
+    PitchKNN(start_dt='2022-03-17', experiment=4, refresh=True)
+    PitchGBC(start_dt='2022-03-17', experiment=4, refresh=True)
