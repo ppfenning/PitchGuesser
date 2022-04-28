@@ -1,6 +1,6 @@
-# Random Forest
+## Random Forest
 ***
-## Base
+### Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -151,7 +151,7 @@
   </tbody>
 </table>
 
-## Scaled
+### Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -302,7 +302,7 @@
   </tbody>
 </table>
 
-## Add_feature
+### Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -453,7 +453,7 @@
   </tbody>
 </table>
 
-## Preprocess
+### Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -604,7 +604,7 @@
   </tbody>
 </table>
 
-## Transform
+### Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -755,7 +755,7 @@
   </tbody>
 </table>
 
-## Noise
+### Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -906,9 +906,9 @@
   </tbody>
 </table>
 
-# K-Nearest Neighbor
+## K-Nearest Neighbor
 ***
-## Base
+### Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1059,7 +1059,7 @@
   </tbody>
 </table>
 
-## Scaled
+### Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1210,7 +1210,7 @@
   </tbody>
 </table>
 
-## Add_feature
+### Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1361,7 +1361,7 @@
   </tbody>
 </table>
 
-## Preprocess
+### Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1512,7 +1512,7 @@
   </tbody>
 </table>
 
-## Transform
+### Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1663,7 +1663,7 @@
   </tbody>
 </table>
 
-## Noise
+### Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1814,9 +1814,9 @@
   </tbody>
 </table>
 
-# Gradient Boosting
+## Gradient Boosting
 ***
-## Base
+### Base
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -1967,7 +1967,7 @@
   </tbody>
 </table>
 
-## Scaled
+### Scaled
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2118,7 +2118,7 @@
   </tbody>
 </table>
 
-## Add_feature
+### Add_feature
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2269,7 +2269,7 @@
   </tbody>
 </table>
 
-## Preprocess
+### Preprocess
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2420,7 +2420,7 @@
   </tbody>
 </table>
 
-## Transform
+### Transform
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
@@ -2571,7 +2571,7 @@
   </tbody>
 </table>
 
-## Noise
+### Noise
 ***
 #### Class Report
 <table border="1" class="dataframe outtbl CR">
