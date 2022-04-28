@@ -2,11 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta as td
 from pathlib import Path
+from sklearn.decomposition import PCA
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -57,28 +58,20 @@ class PitchData:
     def __clean_data(self, df):
         df = df.dropna(subset=['release_speed', 'release_pos_x', 'release_pos_z'])
         df.to_pickle(self.__pkl)
-        df = self.__preprocess(df)
+        df = self.__split_cat(df)
         df = self.__get_cols(df)
         df = df.fillna(method='ffill')
         # most common pitches
         df = df.loc[df.pitch_name.isin(self.pitches), :].sort_values(by=['pitch_name', 'game_date', 'pitcher'])
         return df.loc[(df['game_date'] >= self.__start_ts) & (df['game_date'] <= self.__end_ts), :]
 
-    def __scaler(self, df):
-        scaled = pd.read_csv(f"{self.datadir}/scaled.csv", header=None).squeeze().to_list()
-        for scale in scaled:
-            data = df[scale]
-            df[scale] = (data - np.min(data))/(np.max(data)-np.min(data))
-        return df
-
-    def __preprocess(self, df):
+    def __split_cat(self, df):
         df2 = df.copy()
         df2['lefty'] = df.p_throws == 'L'
         df2['righty'] = df.p_throws == 'R'
         df2['ball'] = df.type == 'B'
         df2['strike'] = df.type == 'S'
         df2['hit_in_play'] = df.type == 'X'
-        df2 = self.__scaler(df2)
         return df2
 
     def __get_data(self):
@@ -99,18 +92,70 @@ class PitchModelBuild(PitchData):
     model = None
     model_pkl = None
     test_size: float = 0.30
+    experiment: int = 0
 
     def __post_init__(self):
+        super(PitchModelBuild, self).__post_init__()
         if self.model is None:
             raise ValueError('A model must be passed')
         if self.model_pkl is None:
             raise ValueError('A model pickle file must be passed')
-        super(PitchModelBuild, self).__post_init__()
+        self.features = self.__feature_types()
         self.__splitter()
         self.__fit()
 
-    def __set_X_y(self):
+    def __feature_types(self):
+        return {
+            'categorical': ['lefty', 'righty', 'ball', 'strike', 'hit_in_play', 'zone'],
+            'numeric': [
+                'release_speed',
+                'release_pos_x',
+                'release_pos_z',
+                'pfx_x',
+                'pfx_z',
+                'plate_x',
+                'plate_z',
+                'vx0',
+                'vy0',
+                'vz0',
+                'ax',
+                'ay',
+                'az',
+                'sz_top',
+                'sz_bot',
+                'release_spin_rate',
+                'release_extension',
+                'spin_axis',
+            ]
+        }
 
+    def __get_exp_model_path(self, exper):
+        fname, ext = self.model_pkl.split('.')
+        fname = f"{fname}_{exper}"
+        return f"{fname}.{ext}"
+
+    def __experiment(self, X):
+        if self.experiment == 1:
+            self.model_pkl = self.__get_exp_model_path('scaled')
+            i = 1
+            for j, col in enumerate(X.columns):
+                if j % 3 == 0:
+                    i += 1
+                    X[col] = X[col] + i
+                elif j % 3 == 1:
+                    X[col] = X[col] * i
+                elif j % 3 == 2:
+                    X[col] = X[col] ** i
+        elif self.experiment == 2:
+            self.model_pkl = self.__get_exp_model_path('add_feature')
+            X['plate_mag'] = np.sqrt(X.plate_x**2 + X.plate_z**2)
+            X['release_pos_mag'] = np.sqrt(X.release_pos_x**2 + X.release_pos_z**2)
+            X['pfx_mag'] = np.sqrt(X.pfx_x**2 + X.pfx_z**2)
+            X['a_mag'] = np.sqrt(X.ax**2 + X.ay**2 + X.az**2)
+            X['v0_mag'] = np.sqrt(X.vx0**2 + X.vy0**2 + X.vz0**2)
+        return X
+
+    def __set_x_y(self):
         skip_cols = (
             'game_date',
             'pitcher',
@@ -121,6 +166,7 @@ class PitchModelBuild(PitchData):
         )
 
         X = self.raw_data.loc[:, ~self.raw_data.columns.isin(skip_cols)].copy()
+        X = self.__experiment(X)
         le = LabelEncoder()
         y = self.raw_data.pitch_name
         y = le.fit_transform(y)
@@ -129,7 +175,7 @@ class PitchModelBuild(PitchData):
 
     def __splitter(self):
 
-        X, y = self.__set_X_y()
+        X, y = self.__set_x_y()
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X,
@@ -157,18 +203,12 @@ class PitchGuessPost(PitchModelBuild):
         self.y_predict = self.__prediction()
         self.cm = self.__get_cm()
         self.score = self.__score()
-        self.feature_types = self.__feature_types()
-
-    def __feature_types(self):
-        categorical = list(self.X_test.select_dtypes(include=['bool']).columns) + ['zone']
-        numeric = list(self.X_test.loc[:, ~self.X_test.columns.isin(categorical)].columns)
-        return {
-            'categorical': categorical,
-            'numeric': numeric,
-        }
 
     def show_correlation(self):
-        corr_df = self.X_train[self.feature_types['numeric']]  # New dataframe to calculate correlation between numeric features
+        if self.experiment != 3:
+            corr_df = self.X_train[self.features['numeric']]
+        else:
+            corr_df = self.X_train
         cor = corr_df.corr(method='pearson')
         fig, ax = plt.subplots(figsize=(8, 6))
         plt.title("Correlation Plot")
@@ -184,7 +224,7 @@ class PitchGuessPost(PitchModelBuild):
 
     def show_pair_plot(self):
         sns.set()
-        fcols = self.feature_types['numeric'] + ['pitch_name']
+        fcols = self.features['numeric'] + ['pitch_name']
         df = self.raw_data[fcols].sample(300, replace=False).reset_index(drop=True)
         plt.title("Pair Plot")
         sns.pairplot(df, hue="pitch_name")
@@ -245,6 +285,15 @@ class PitchKNN(PitchGuessPost):
     model_pkl = f'{tmpdir}/KNN.pkl'
 
 if __name__ == '__main__':
-    rfc = PitchRFC(start_dt='2022-03-17')
-    gbc = PitchGBC(start_dt='2022-03-17')
-    knn = PitchKNN(start_dt='2022-03-17')
+    # base
+    PitchRFC(start_dt='2022-03-17', refresh=True)
+    PitchKNN(start_dt='2022-03-17', refresh=True)
+    PitchGBC(start_dt='2022-03-17', refresh=True)
+    # exp1
+    PitchRFC(start_dt='2022-03-17', refresh=True, experiment=1)
+    PitchKNN(start_dt='2022-03-17', refresh=True, experiment=1)
+    PitchGBC(start_dt='2022-03-17', refresh=True, experiment=1)
+    # exp2
+    PitchRFC(start_dt='2022-03-17', refresh=True, experiment=2)
+    PitchKNN(start_dt='2022-03-17', refresh=True, experiment=2)
+    PitchGBC(start_dt='2022-03-17', refresh=True, experiment=2)

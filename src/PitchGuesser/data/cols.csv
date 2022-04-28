@@ -6,11 +6,11 @@ righty
 ball
 strike
 hit_in_play
+zone
 pitch_name
 release_speed
 release_pos_x
 release_pos_z
-zone
 pfx_x
 pfx_z
 plate_x
