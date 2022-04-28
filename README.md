@@ -1,11 +1,11 @@
 # Pitch Guesser
 
 ![Alt text](plots/correlation.png "Numeric Correlation")
-![Alt text](plots/release.png "Numeric Correlation")
-![Alt text](plots/spin.png "Numeric Correlation")
-![Alt text](plots/position.png "Numeric Correlation")
-![Alt text](plots/velocity.png "Numeric Correlation")
-![Alt text](plots/acceleration.png "Numeric Correlation")
+![Alt text](plots/release.png "Release")
+![Alt text](plots/spin.png "Spin")
+![Alt text](plots/position.png "Position")
+![Alt text](plots/velocity.png "Velocity")
+![Alt text](plots/acceleration.png "Acceleration")
 
 ## Random Forest
 ***
