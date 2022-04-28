@@ -337,10 +337,30 @@ def get_experiments():
     }
 
 def pair_plots():
+    plt_fold = 'C:\\Users\\pfenn\\PycharmProjects\\PitchGuesser\\plots'
     sns.set()
     rfc = PitchRFC()
-    df_full = rfc.raw_data[rfc.features['numeric']]
-    print(df_full)
+    df_full = rfc.raw_data[rfc.features['numeric'] + ['pitch_name']].sample(300, replace=False).reset_index(drop=True)
+    sns.pairplot(
+        df_full[['release_pos_x', 'release_pos_z', 'release_extension', 'pitch_name']],
+        hue="pitch_name"
+    ).figure.savefig(f"{plt_fold}/release.png")
+    sns.pairplot(
+        df_full[['pfx_x', 'pfx_z', 'sz_top', 'sz_bot', 'pitch_name']],
+        hue="pitch_name"
+    ).figure.savefig(f"{plt_fold}/position.png")
+    sns.pairplot(
+        df_full[['release_speed', 'release_spin_rate', 'spin_axis', 'pitch_name']],
+        hue="pitch_name"
+    ).figure.savefig(f"{plt_fold}/spin.png")
+    sns.pairplot(
+        df_full[['vx0', 'vy0', 'vz0', 'pitch_name']],
+        hue="pitch_name"
+    ).figure.savefig(f"{plt_fold}/velocity.png")
+    sns.pairplot(
+        df_full[['ax', 'ay', 'az', 'pitch_name']],
+        hue="pitch_name"
+    ).figure.savefig(f"{plt_fold}/acceleration.png")
 
 if __name__ == '__main__':
     pair_plots()

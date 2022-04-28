@@ -1,41 +1,11 @@
-<style>
-.outtbl {
-    color: green;
-    font-weight:700;
-    font-size: 15px;
-}
-.row {
-  display: flex;
-  margin-left:-5px;
-  margin-right:-5px;
-}
-
-.column {
-  flex: 50%;
-  padding: 5px;
-}
-
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-  width: 100%;
-  border: 1px solid #ddd;
-}
-
-th, td {
-  text-align: left;
-  padding: 16px;
-}
-
-tr:nth-child(even) {
-  background-color: dodgerblue;
-}
-</style>
-
 # Pitch Guesser
 
-![Alt text](plots/correlation.png "a title")
-![Alt text](plots/pair_plot.png "a title")
+![Alt text](plots/correlation.png "Numeric Correlation")
+![Alt text](plots/release.png "Numeric Correlation")
+![Alt text](plots/spin.png "Numeric Correlation")
+![Alt text](plots/position.png "Numeric Correlation")
+![Alt text](plots/velocity.png "Numeric Correlation")
+![Alt text](plots/acceleration.png "Numeric Correlation")
 
 ## Random Forest
 ***
