@@ -289,21 +289,33 @@ class PitchKNN(PitchGuessPost):
     model = _get_grid_search(KNeighborsClassifier(), __params)
     model_pkl = f'{tmpdir}/KNN.pkl'
 
+def get_experiments():
+    return {
+        'RFC': {
+            'base': PitchRFC(start_dt='2022-03-17'),
+            'scaled': PitchRFC(start_dt='2022-03-17', experiment=1),
+            'add_feature': PitchRFC(start_dt='2022-03-17', experiment=2),
+            'preprocess': PitchRFC(start_dt='2022-03-17', experiment=3),
+            'transform': PitchRFC(start_dt='2022-03-17', experiment=4),
+            'noise': PitchRFC(start_dt='2022-03-17', experiment=5)
+        },
+        'GBC': {
+            'base': PitchKNN(start_dt='2022-03-17'),
+            'scaled': PitchKNN(start_dt='2022-03-17', experiment=1),
+            'add_feature': PitchKNN(start_dt='2022-03-17', experiment=2),
+            'preprocess': PitchKNN(start_dt='2022-03-17', experiment=3),
+            'transform': PitchKNN(start_dt='2022-03-17', experiment=4),
+            'noise': PitchKNN(start_dt='2022-03-17', experiment=5)
+        },
+        'KNN': {
+            'base': PitchGBC(start_dt='2022-03-17'),
+            'scaled': PitchGBC(start_dt='2022-03-17', experiment=1),
+            'add_feature': PitchGBC(start_dt='2022-03-17', experiment=2),
+            'preprocess': PitchGBC(start_dt='2022-03-17', experiment=3),
+            'transform': PitchGBC(start_dt='2022-03-17', experiment=4),
+            'noise': PitchGBC(start_dt='2022-03-17', experiment=5)
+        }
+    }
+
 if __name__ == '__main__':
-    # base
-    #PitchRFC(start_dt='2022-03-17')
-    #PitchKNN(start_dt='2022-03-17')
-    #PitchGBC(start_dt='2022-03-17')
-    ## exp1
-    #PitchRFC(start_dt='2022-03-17', experiment=1)
-    #PitchKNN(start_dt='2022-03-17', experiment=1)
-    #PitchGBC(start_dt='2022-03-17', experiment=1)
-    ## exp2
-    #PitchRFC(start_dt='2022-03-17', experiment=2)
-    #PitchKNN(start_dt='2022-03-17', experiment=2)
-    #PitchGBC(start_dt='2022-03-17', experiment=2)
-    # exp5
-    #PitchRFC(start_dt='2022-03-17', experiment=5)
-    #PitchKNN(start_dt='2022-03-17', experiment=5)
-    #PitchGBC(start_dt='2022-03-17', experiment=5)
     pass
