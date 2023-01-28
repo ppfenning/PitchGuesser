@@ -1,0 +1,56 @@
+init:
+  start: 2022-03-17
+  refresh: False
+  cache: True
+  data: ./data
+
+columns:
+  identifiers:
+    - game_date
+    - pitcher
+    - player_name
+  categorical:
+    - left
+    - right
+    - ball
+    - strike
+    - hit_in_play
+    - zone
+  numeric:
+    - release_speed
+    - release_pos_x
+    - release_pos_z
+    - pfx_x
+    - pfx_z
+    - plate_x
+    - plate_z
+    - vx0
+    - vy0
+    - vz0
+    - ax
+    - ay
+    - az
+    - sz_top
+    - sz_bot
+    - release_spin_rate
+    - release_extension
+    - spin_axis
+
+scaled:
+  - release_speed
+  - vx0
+  - vy0
+  - vz0
+  - ax
+  - ay
+  - az
+  - release_spin_rate
+  - spin_axis
+    
+pitches:
+  - 4-Seam Fastball
+  - Changeup
+  - Curveball
+  - Cutter
+  - Sinker
+  - Slider

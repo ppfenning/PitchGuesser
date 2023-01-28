@@ -32,9 +32,11 @@ class PitchData:
 
     def __post_init__(self):
         pdir = Path(__file__).parent.absolute()
-        self.datadir = os.path.join(pdir, 'data')
+        self.datadir = os.path.join(pdir, '../../config')
         self.__pkl = f"{tmpdir}/pitch_data.pkl"
-        self.pitches = ['4-Seam Fastball', 'Changeup', 'Curveball', 'Cutter', 'Sinker', 'Slider']
+        self.pitches = [
+
+        ]
         self.__start_ts = dt.strptime(self.start_dt, "%Y-%m-%d")
         self.__end_ts = dt.strptime(self.end_dt, "%Y-%m-%d")
         self.raw_data = self.__get_data()
@@ -73,8 +75,8 @@ class PitchData:
 
     def __split_cat(self, df):
         df2 = df.copy()
-        df2['lefty'] = df.p_throws == 'L'
-        df2['righty'] = df.p_throws == 'R'
+        df2['left'] = df.p_throws == 'L'
+        df2['right'] = df.p_throws == 'R'
         df2['ball'] = df.type == 'B'
         df2['strike'] = df.type == 'S'
         df2['hit_in_play'] = df.type == 'X'
